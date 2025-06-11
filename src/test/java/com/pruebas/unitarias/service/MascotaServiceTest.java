@@ -2,6 +2,7 @@ package com.pruebas.unitarias.service;
 
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,8 @@ public class MascotaServiceTest {
         Mascota resultado = mascotaService.guardarMascota(mascota);
         assertThat(resultado.getId()).isEqualTo(1L);
         assertThat(resultado.getNombre()).isEqualTo("Rex");
+        assertThat(resultado.getTipo()).isEqualTo("Perro");
+        assertThat(resultado.getEdad()).isEqualTo(5);
         verify(mascotaRepository).save(mascota);
     }
 
@@ -57,10 +60,44 @@ public class MascotaServiceTest {
     /*Test para obtener mascota por id*/
     @Test
     void testObtenerMascotaPorId() {
-        Mascota mascota = new Mascota(1L, "Rex", "Perro",5);
-        when(mascotaRepository.findById(1L)).thenReturn(mascota);
+        Mascota mascota = new Mascota(1L, "Rex", "Perro", 5);
+        when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mascota));
 
         Optional<Mascota> resultado = mascotaService.obtenerMascotaPorId(1L);
-        assertThat(resultado.get).isEqualTo(1L);
+
+        assertEquals("Rex", resultado.get().getNombre());
+        assertThat(resultado.get().getId()).isEqualTo(1L);
+        assertThat(resultado.get().getNombre()).isEqualTo("Rex");
+        assertThat(resultado.get().getTipo()).isEqualTo("Perro");
+        assertThat(resultado.get().getEdad()).isEqualTo(5);
+        verify(mascotaRepository).findById(1L);
+    }
+
+    /*Test para eliminar mascota por id*/
+    @Test
+    void testEliminarMascota() {
+        when(mascotaRepository.existsById(3L)).thenReturn(false);
+
+        mascotaService.eliminarMascota(3L);
+
+        verify(mascotaRepository, times(1)).deleteById(3L);
+    }
+
+    /*Test para actualizar mascota*/
+    @Test
+    void testActualizarMascota() {
+        Mascota mExistente = new Mascota(1L, "Rex", "Perro", 5);
+        Mascota mActualizada = new Mascota(2L, "Michi", "Gato", 2);
+        when(mascotaRepository.findById(1L)).thenReturn(Optional.of(mExistente));
+        when(mascotaRepository.save(mExistente)).thenReturn(mExistente);
+
+        Mascota resultado = mascotaService.actualizarMascota(1L, mActualizada);
+        assertEquals("Michi", resultado.getNombre());
+        assertThat(resultado.getId()).isEqualTo(1L);
+        assertThat(resultado.getNombre()).isEqualTo("Michi");
+        assertThat(resultado.getTipo()).isEqualTo("Gato");
+        assertThat(resultado.getEdad()).isEqualTo(2);
+        verify(mascotaRepository).findById(1L);
+
     }
 }
